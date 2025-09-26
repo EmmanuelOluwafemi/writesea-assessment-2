@@ -1,5 +1,5 @@
 "use client";
-import React, { useState, useDeferredValue, useTransition } from "react";
+import React, { useState } from "react";
 import { selectFormsOrder, selectShowByForm, ShowForm } from "@/lib/redux/settings-slice";
 import { WorkExperiencesForm } from "./work-experiences-form";
 import { EducationsForm } from "./educations-form";
@@ -25,10 +25,6 @@ export const ResumeForm = () => {
   
   const formsOrder = useAppSelector(selectFormsOrder);
   const [isHover, setIsHover] = useState(false);
-  const [isPending, startTransition] = useTransition();
-  
-  // Defer form rendering to reduce priority and improve responsiveness
-  const deferredFormsOrder = useDeferredValue(formsOrder);
 
   return (
     <div
@@ -41,7 +37,7 @@ export const ResumeForm = () => {
     >
       <section className="flex max-w-2xl flex-col gap-8 p-[var(--resume-padding)]">
         <ProfileForm />
-        {deferredFormsOrder.map((form) => (
+        {formsOrder.map((form) => (
           <ConditionalFormRenderer key={form} form={form} />
         ))}
         {/* <ThemeForm /> */}

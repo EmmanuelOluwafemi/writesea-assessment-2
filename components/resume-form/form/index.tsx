@@ -119,16 +119,15 @@ const AddButton = ({
   </div>
 );
 
-export const Form = React.memo(
-  ({
-    form,
-    addButtonText,
-    children,
-  }: {
-    form: ShowForm;
-    addButtonText?: string;
-    children: React.ReactNode;
-  }) => {
+export const Form = ({
+  form,
+  addButtonText,
+  children,
+}: {
+  form: ShowForm;
+  addButtonText?: string;
+  children: React.ReactNode;
+}) => {
     const showForm = useAppSelector(selectShowByForm(form));
     const heading = useAppSelector(selectHeadingByForm(form));
     const isFirstForm = useAppSelector(selectIsFirstForm(form));
@@ -136,46 +135,27 @@ export const Form = React.memo(
 
     const dispatch = useAppDispatch();
 
-    // Memoize callbacks to prevent child re-renders
-    const handleShowFormChange = useCallback(
-      (showForm: boolean) => {
-        dispatch(changeShowForm({ field: form, value: showForm }));
-      },
-      [dispatch, form]
-    );
+    // Simplified handlers - no need for useCallback for infrequent actions
+    const handleShowFormChange = (showForm: boolean) => {
+      dispatch(changeShowForm({ field: form, value: showForm }));
+    };
 
-    const handleHeadingChange = useCallback(
-      (heading: string) => {
-        dispatch(changeFormHeading({ field: form, value: heading }));
-      },
-      [dispatch, form]
-    );
+    const handleHeadingChange = (heading: string) => {
+      dispatch(changeFormHeading({ field: form, value: heading }));
+    };
 
-    const handleMoveClick = useCallback(
-      (type: "up" | "down") => {
-        dispatch(changeFormOrder({ form, type }));
-      },
-      [dispatch, form]
-    );
+    const handleMoveClick = (type: "up" | "down") => {
+      dispatch(changeFormOrder({ form, type }));
+    };
 
-    const handleAddClick = useCallback(() => {
+    const handleAddClick = () => {
       dispatch(addSectionInForm({ form }));
-    }, [dispatch, form]);
+    };
 
-    // Memoize icon to prevent re-creation
-    const Icon = useMemo(() => FORM_TO_ICON[form], [form]);
-
-    // Memoize className to prevent re-computation
-    const baseFormClassName = useMemo(
-      () =>
-        `transition-opacity duration-200 ${
-          showForm ? "pb-6" : "pb-2 opacity-60"
-        }`,
-      [showForm]
-    );
+    const Icon = FORM_TO_ICON[form];
 
     return (
-      <BaseForm className={baseFormClassName}>
+      <BaseForm>
         <FormHeader
           form={form}
           Icon={Icon}
@@ -198,8 +178,7 @@ export const Form = React.memo(
         )}
       </BaseForm>
     );
-  }
-);
+};
 
 export const FormSection = React.memo(
   ({

@@ -1,4 +1,4 @@
-import React, { useCallback } from "react";
+import React from "react";
 import { useAppDispatch, useAppSelector } from "@/lib/redux/hooks";
 import { changeCustom, selectCustom } from "@/lib/redux/resume-slice";
 import { changeShowBulletPoints, selectShowBulletPoints } from "@/lib/redux/settings-slice";
@@ -6,7 +6,7 @@ import { Form } from "./form";
 import { BulletListTextarea } from "./form/input-group";
 import { BulletListIconButton } from "./form/icon-button";
 
-export const CustomForm = React.memo(() => {
+export const CustomForm = () => {
   const custom = useAppSelector(selectCustom);
   const dispatch = useAppDispatch();
   const { descriptions } = custom;
@@ -17,14 +17,14 @@ export const CustomForm = React.memo(() => {
     dispatch(changeCustom({ field, value }));
   };
 
-  // Memoized wrapper function for BulletListTextarea component
-  const handleDescriptionsChange = useCallback((name: string, value: string[]) => {
+  // Wrapper function for BulletListTextarea component
+  const handleDescriptionsChange = (name: string, value: string[]) => {
     handleCustomChange("descriptions", value);
-  }, []);
+  };
 
-  const handleShowBulletPoints = useCallback((value: boolean) => {
+  const handleShowBulletPoints = (value: boolean) => {
     dispatch(changeShowBulletPoints({ field: form, value }));
-  }, [dispatch, form]);
+  };
 
   return (
     <Form form={form}>
@@ -49,6 +49,6 @@ export const CustomForm = React.memo(() => {
       </div>
     </Form>
   );
-});
+};
 
 CustomForm.displayName = 'CustomForm';

@@ -6,7 +6,7 @@ import { BaseForm } from "./form";
 import { OptimizedInput, OptimizedTextarea } from "./form/optimized-input-group";
 import { z } from "zod";
 
-export const ProfileForm = React.memo(() => {
+export const ProfileForm = () => {
   const profile = useAppSelector(selectProfile);
   const dispatch = useAppDispatch();
   const { name, email, phone, url, summary, location } = profile;
@@ -112,6 +112,6 @@ export const ProfileForm = React.memo(() => {
       </div>
     </BaseForm>
   );
-});
+};
 
 ProfileForm.displayName = 'ProfileForm';
