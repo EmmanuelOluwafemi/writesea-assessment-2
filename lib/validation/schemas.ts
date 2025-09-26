@@ -1,20 +1,44 @@
 import { z } from 'zod';
 
-// Profile validation schema
+// Enhanced profile validation schema
 export const profileSchema = z.object({
-  name: z.string().min(1, "Name is required").max(100, "Name must be less than 100 characters"),
-  email: z.string().email("Please enter a valid email address").or(z.literal("")),
-  phone: z.string().optional().or(z.literal("")),
-  url: z.string().optional().or(z.literal("")),
-  summary: z.string().optional().or(z.literal("")),
-  location: z.string().optional().or(z.literal("")),
+  name: z.string()
+    .min(1, "Name is required")
+    .max(100, "Name must be less than 100 characters")
+    .regex(/^[a-zA-Z\s'-]+$/, "Name can only contain letters, spaces, hyphens, and apostrophes"),
+  email: z.string()
+    .email("Please enter a valid email address")
+    .or(z.literal(""))
+    .refine((val) => val === "" || val.includes("@"), "Email must contain @ symbol"),
+  phone: z.string()
+    .regex(/^[\+]?[1-9][\d]{0,15}$/, "Please enter a valid phone number (e.g., +1234567890)")
+    .or(z.literal("")),
+  url: z.string()
+    .url("Please enter a valid URL (e.g., https://example.com)")
+    .or(z.literal(""))
+    .refine((val) => val === "" || val.startsWith("http"), "URL must start with http:// or https://"),
+  summary: z.string()
+    .max(500, "Summary must be less than 500 characters")
+    .or(z.literal("")),
+  location: z.string()
+    .max(100, "Location must be less than 100 characters")
+    .or(z.literal("")),
 });
 
-// Work experience validation schema
+// Enhanced work experience validation schema
 export const workExperienceSchema = z.object({
-  company: z.string().min(1, "Company name is required").max(100, "Company name must be less than 100 characters"),
-  jobTitle: z.string().min(1, "Job title is required").max(100, "Job title must be less than 100 characters"),
-  date: z.string().min(1, "Date is required").max(50, "Date must be less than 50 characters"),
+  company: z.string()
+    .min(1, "Company name is required")
+    .max(100, "Company name must be less than 100 characters")
+    .regex(/^[a-zA-Z0-9\s&.,'-]+$/, "Company name contains invalid characters"),
+  jobTitle: z.string()
+    .min(1, "Job title is required")
+    .max(100, "Job title must be less than 100 characters")
+    .regex(/^[a-zA-Z0-9\s&.,'/()-]+$/, "Job title contains invalid characters"),
+  date: z.string()
+    .min(1, "Date is required")
+    .max(50, "Date must be less than 50 characters")
+    .regex(/^[a-zA-Z0-9\s-,]+$/, "Date format is invalid (e.g., 'Jan 2020 - Present')"),
   descriptions: z.array(z.string()).default([]),
 });
 

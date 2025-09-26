@@ -7,7 +7,7 @@ import {
   LETTER_WIDTH_PT,
   LETTER_WIDTH_PX,
 } from "@/lib/constants";
-import { useMemo } from "react";
+import React, { useMemo } from "react";
 import { getAllFontFamiliesToLoad } from "../fonts/lib";
 import Frame from "react-frame-component";
 import dynamic from "next/dynamic";
@@ -42,7 +42,7 @@ const getIframeInitialContent = (isA4: boolean) => {
       ${allFontFamiliesFontFaces}
     </style>
   </head>
-  <body style='overflow: hidden; width: ${width}pt; margin: 0; padding: 0; -webkit-text-size-adjust:none;'>
+  <body style='overflow: visible; width: ${width}pt; margin: 0; padding: 0; -webkit-text-size-adjust:none; height: auto;'>
     <div></div>
   </body>
 </html>`;
@@ -52,7 +52,7 @@ const getIframeInitialContent = (isA4: boolean) => {
  * Iframe is used here for style isolation, since react pdf uses pt unit.
  * It creates a sandbox document body that uses letter/A4 pt size as width.
  */
-const ResumeIframe = ({
+const ResumeIframe = React.memo(({
   documentSize,
   scale,
   children,
@@ -82,8 +82,8 @@ const ResumeIframe = ({
   return (
     <div
       style={{
-        maxWidth: `${width * scale}px`,
-        maxHeight: `${height * scale}px`,
+        width: `${width * scale}px`,
+        height: "auto", // Let content determine height
       }}
     >
       {/* There is an outer div and an inner div here. The inner div sets the iframe width and uses transform scale to zoom in/out the resume iframe.
@@ -92,13 +92,14 @@ const ResumeIframe = ({
       <div
         style={{
           width: `${width}px`,
-          height: `${height}px`,
+          height: "auto", // Let content determine height
           transform: `scale(${scale})`,
+          transformOrigin: "top left",
         }}
-        className={`origin-top-left bg-white shadow-lg`}
+        className="bg-white shadow-lg rounded-lg overflow-visible"
       >
         <Frame
-          style={{ width: "100%", height: "100%" }}
+          style={{ width: "100%", height: "auto", minHeight: `${height}px` }}
           initialContent={iframeInitialContent}
           // key is used to force component to re-mount when document size changes
           key={isA4 ? "A4" : "LETTER"}
@@ -108,7 +109,9 @@ const ResumeIframe = ({
       </div>
     </div>
   );
-};
+});
+
+ResumeIframe.displayName = 'ResumeIframe';
 
 /**
  * Load iframe client side since iframe can't be SSR

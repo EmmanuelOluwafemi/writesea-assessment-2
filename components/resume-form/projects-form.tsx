@@ -1,24 +1,28 @@
-import React from "react";
-import { useAppDispatch, useAppSelector } from "@/lib/redux/hooks";
+import React, { useMemo, useCallback } from "react";
+import { useAppSelector, useAppDispatch } from "@/lib/redux/hooks";
 import { changeProjects, selectProjects } from "@/lib/redux/resume-slice";
-import { Form, FormSection } from "./form";
-import { CreateHandleChangeArgsWithDescriptions } from "./types";
 import { ResumeProject } from "@/lib/redux/types";
+import { Form, FormSection } from "./form";
 import { BulletListTextarea, Input } from "./form/input-group";
+import { z } from "zod";
 
 export const ProjectsForm = React.memo(() => {
   const projects = useAppSelector(selectProjects);
   const dispatch = useAppDispatch();
   const showDelete = projects.length > 1;
 
+  // Validation schemas for project fields
+  const validationSchemas = useMemo(() => ({
+    project: z.string().min(1, "Project name is required").max(100, "Project name must be less than 100 characters"),
+    date: z.string().min(1, "Date is required").max(50, "Date must be less than 50 characters"),
+  }), []);
+
   return (
     <Form form="projects" addButtonText="Add Project">
       {projects.map(({ project, date, descriptions }, idx) => {
         const handleProjectChange = (
-          ...[
-            field,
-            value,
-          ]: CreateHandleChangeArgsWithDescriptions<ResumeProject>
+          field: keyof ResumeProject,
+          value: string | string[]
         ) => {
           dispatch(changeProjects({ idx, field, value } as any));
         };
@@ -56,6 +60,8 @@ export const ProjectsForm = React.memo(() => {
               value={project}
               onChange={handleProjectNameChange}
               labelClassName="col-span-4"
+              validationSchema={validationSchemas.project}
+              showValidation={true}
             />
             <Input
               name="date"
@@ -64,6 +70,8 @@ export const ProjectsForm = React.memo(() => {
               value={date}
               onChange={handleDateChange}
               labelClassName="col-span-2"
+              validationSchema={validationSchemas.date}
+              showValidation={true}
             />
             <BulletListTextarea
               name="descriptions"

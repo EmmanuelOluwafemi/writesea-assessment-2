@@ -26,10 +26,19 @@ export const Resume = () => {
 
   return (
     <>
-      <div className="relative flex justify-center md:justify-start">
+      <div className="flex justify-center md:justify-start">
         <FlexboxSpacer maxWidth={50} className="hidden md:block" />
-        <div className="relative">
-          <section className="h-[calc(100vh-var(--top-nav-bar-height)-var(--resume-control-bar-height))] overflow-hidden md:p-[var(--resume-padding)]">
+        <div 
+          className="sticky top-[var(--top-nav-bar-height)] bg-white shadow-lg rounded-lg border border-gray-200"
+          style={{
+            height: "calc(100vh - var(--top-nav-bar-height) - var(--resume-control-bar-height) - 2rem)",
+            width: "fit-content",
+            maxWidth: "90vw",
+          }}
+        >
+          <div 
+            className="h-full overflow-auto scrollbar-thin scrollbar-track-gray-100 scrollbar-thumb-gray-300 hover:scrollbar-thumb-gray-400 p-4"
+          >
             <ResumeIframeCSR
               documentSize={"Letter"}
               scale={scale}
@@ -41,7 +50,7 @@ export const Resume = () => {
                 isPDF={DEBUG_RESUME_PDF_FLAG}
               />
             </ResumeIframeCSR>
-          </section>
+          </div>
         </div>
       </div>
     </>

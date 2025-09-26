@@ -72,9 +72,13 @@ export const Input = React.memo(<K extends string>({
     [name, onChange]
   );
 
+  // Enhanced validation with visual feedback
+  const { isValid, error } = useFieldValidation(validationSchema || z.any(), value);
+  const shouldShowValidation = showValidation && validationSchema;
+  
   const inputClassName = useMemo(
-    () => getInputClassName(false), // No validation styling for performance
-    []
+    () => getInputClassName(Boolean(shouldShowValidation && !isValid)),
+    [shouldShowValidation, isValid]
   );
 
   return (
@@ -115,9 +119,13 @@ export const Textarea = React.memo(<T extends string>({
     [name, onChange]
   );
   
+  // Enhanced validation with visual feedback
+  const { isValid, error } = useFieldValidation(validationSchema || z.any(), value);
+  const shouldShowValidation = showValidation && validationSchema;
+  
   const textareaClassName = useMemo(
-    () => `${getInputClassName(false)} resize-none overflow-hidden min-h-[2.5rem]`,
-    []
+    () => `${getInputClassName(Boolean(shouldShowValidation && !isValid))} resize-none overflow-hidden min-h-[2.5rem]`,
+    [shouldShowValidation, isValid]
   );
 
   return (
@@ -133,11 +141,12 @@ export const Textarea = React.memo(<T extends string>({
         value={value}
         onChange={handleChange}
       />
+      {shouldShowValidation && !isValid && error && (
+        <p className="mt-1 text-sm text-red-600 animate-fade-in">{error}</p>
+      )}
     </InputGroupWrapper>
   );
 });
-
-Textarea.displayName = 'Textarea';
 
 export const BulletListTextarea = React.memo(<T extends string>(
   props: InputProps<T, string[]> & { showBulletPoints?: boolean }

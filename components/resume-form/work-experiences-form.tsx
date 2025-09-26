@@ -1,4 +1,4 @@
-import React, { useCallback } from "react";
+import React, { useCallback, useMemo } from "react";
 import { useAppSelector, useAppDispatch } from "@/lib/redux/hooks";
 import {
   changeWorkExperiences,
@@ -7,6 +7,8 @@ import {
 import { ResumeWorkExperience } from "@/lib/redux/types";
 import { Form, FormSection } from "./form";
 import { BulletListTextarea, Input } from "./form/input-group";
+import { workExperienceSchema } from "@/lib/validation/schemas";
+import { z } from "zod";
 
 // Extract WorkExperienceItem to fix map function anti-pattern
 const WorkExperienceItem = React.memo(({ 
@@ -25,6 +27,13 @@ const WorkExperienceItem = React.memo(({
   onUpdate: (idx: number, field: keyof ResumeWorkExperience, value: string | string[]) => void;
 }) => {
   const { company, jobTitle, date, descriptions } = workExperience;
+
+  // Validation schemas for work experience fields
+  const validationSchemas = useMemo(() => ({
+    company: z.string().min(1, "Company name is required").max(100, "Company name must be less than 100 characters"),
+    jobTitle: z.string().min(1, "Job title is required").max(100, "Job title must be less than 100 characters"),
+    date: z.string().min(1, "Date is required").max(50, "Date must be less than 50 characters"),
+  }), []);
 
   // Memoized wrapper functions with stable references
   const handleCompanyChange = useCallback((name: string, value: string) => {
@@ -59,6 +68,8 @@ const WorkExperienceItem = React.memo(({
         placeholder="Khan Academy"
         value={company}
         onChange={handleCompanyChange}
+        validationSchema={validationSchemas.company}
+        showValidation={true}
       />
       <Input
         label="Job Title"
@@ -67,6 +78,8 @@ const WorkExperienceItem = React.memo(({
         placeholder="Software Engineer"
         value={jobTitle}
         onChange={handleJobTitleChange}
+        validationSchema={validationSchemas.jobTitle}
+        showValidation={true}
       />
       <Input
         label="Date"
@@ -75,6 +88,8 @@ const WorkExperienceItem = React.memo(({
         placeholder="Jun 2022 - Present"
         value={date}
         onChange={handleDateChange}
+        validationSchema={validationSchemas.date}
+        showValidation={true}
       />
       <BulletListTextarea
         label="Description"

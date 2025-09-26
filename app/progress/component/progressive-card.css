@@ -1,0 +1,66 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: "Roboto", sans-serif;
+  }
+  
+  body {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+  }
+  
+  .container {
+    position: relative;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+  
+  .container .card {
+    position: relative;
+    width: 220px;
+    height: 250px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  
+  .container .card .percent {
+    position: relative;
+    width: 150px;
+    height: 150px;
+  }
+  
+  .container .card .percent svg {
+    position: relative;
+    width: 150px;
+    height: 150px;
+    transform: rotate(135deg);
+  }
+  
+  .container .card .percent svg circle {
+    width: 100%;
+    height: 100%;
+    fill: transparent;
+    stroke-width: 10;
+    stroke: #191919;
+    transform: translate(5px, 5px);
+  }
+
+  .container .card .percent svg circle:nth-child(1) {
+    stroke: #e9e9e9;
+    stroke-dasharray: 440;
+    stroke-dashoffset: calc(440 - (440 * var(--num2)) / 100);
+    stroke-linecap: round;
+  }
+  
+  .container .card .percent svg circle:nth-child(2) {
+    stroke: var(--clr);
+    stroke-dasharray: 440;
+    stroke-dashoffset: calc(440 - (440 * var(--num)) / 100);
+    stroke-linecap: round;
+  }
+  

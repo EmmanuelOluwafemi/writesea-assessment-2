@@ -4,6 +4,7 @@ import { changeProfile, selectProfile } from "@/lib/redux/resume-slice";
 import { ResumeProfile } from "@/lib/redux/types";
 import { BaseForm } from "./form";
 import { OptimizedInput, OptimizedTextarea } from "./form/optimized-input-group";
+import { profileSchema } from "@/lib/validation/schemas";
 import { z } from "zod";
 
 export const ProfileForm = () => {
@@ -39,11 +40,11 @@ export const ProfileForm = () => {
   // Memoized validation schemas to prevent re-creation on every render
   const validationSchemas = useMemo(() => ({
     name: z.string().min(1, "Name is required").max(100, "Name must be less than 100 characters"),
-    email: z.string().refine((val) => val === "" || z.string().email().safeParse(val).success, "Please enter a valid email address"),
-    phone: z.string(),
-    url: z.string(),
-    summary: z.string(),
-    location: z.string(),
+    email: z.string().email("Please enter a valid email address").or(z.literal("")),
+    phone: z.string().regex(/^[\+]?[1-9][\d]{0,15}$/, "Please enter a valid phone number").or(z.literal("")),
+    url: z.string().url("Please enter a valid URL (e.g., https://example.com)").or(z.literal("")),
+    summary: z.string().max(500, "Summary must be less than 500 characters").or(z.literal("")),
+    location: z.string().max(100, "Location must be less than 100 characters").or(z.literal("")),
   }), []);
 
   return (
@@ -93,7 +94,7 @@ export const ProfileForm = () => {
           label="Website"
           labelClassName="col-span-4"
           name="url"
-          placeholder="linkedin.com/in/khanacademy"
+          placeholder="https://linkedin.com/in/khanacademy"
           value={url}
           onChange={handleUrlChange}
           validationSchema={validationSchemas.url}

@@ -1,15 +1,16 @@
 "use client";
 import React, { useState } from "react";
-import { selectFormsOrder, selectShowByForm, ShowForm } from "@/lib/redux/settings-slice";
+import { selectFormsOrder, selectShowByForm, ShowForm, selectHeadingByForm, changeShowForm } from "@/lib/redux/settings-slice";
 import { WorkExperiencesForm } from "./work-experiences-form";
 import { EducationsForm } from "./educations-form";
 import { ProjectsForm } from "./projects-form";
 import { SkillsForm } from "./skills-form";
 import { CustomForm } from "./custom-form";
-import { useAppSelector, useSaveStateToLocalStorageOnChange, useSetInitialStore } from "@/lib/redux/hooks";
+import { useAppSelector, useAppDispatch, useSaveStateToLocalStorageOnChange, useSetInitialStore } from "@/lib/redux/hooks";
 import { ProfileForm } from "./profile-form";
 import { FlexboxSpacer } from "../flexbox-spacer";
 import { cx } from "@/lib/cx";
+import { EyeIcon } from "@heroicons/react/24/outline";
 
 const formTypeToComponent: { [type in ShowForm]: () => React.ReactNode } = {
   workExperiences: WorkExperiencesForm as any,
@@ -48,13 +49,48 @@ export const ResumeForm = () => {
   );
 };
 
+// Collapsed form header component - shows when form is hidden to allow re-enabling
+const CollapsedFormHeader = React.memo(({ form }: { form: ShowForm }) => {
+  const dispatch = useAppDispatch();
+  const heading = useAppSelector(selectHeadingByForm(form));
+  
+  const handleShowForm = () => {
+    dispatch(changeShowForm({ field: form, value: true }));
+  };
+  
+  return (
+    <div className="group relative rounded-lg border border-dashed border-gray-300 bg-gray-50 p-4 transition-all hover:border-gray-400 hover:bg-gray-100">
+      <div className="flex items-center justify-between">
+        <div className="flex items-center space-x-3">
+          <div className="text-sm font-medium text-gray-500">
+            {heading} (Hidden)
+          </div>
+        </div>
+        <button
+          onClick={handleShowForm}
+          className="flex items-center space-x-2 rounded-md bg-blue-50 px-3 py-1.5 text-sm font-medium text-blue-700 transition-colors hover:bg-blue-100 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+          title={`Show ${heading} section`}
+        >
+          <EyeIcon className="h-4 w-4" />
+          <span>Show Section</span>
+        </button>
+      </div>
+      <div className="mt-2 text-xs text-gray-400">
+        Click "Show Section" to add this section back to your resume
+      </div>
+    </div>
+  );
+});
+
+CollapsedFormHeader.displayName = 'CollapsedFormHeader';
+
 // Conditional form renderer component
 const ConditionalFormRenderer = React.memo(({ form }: { form: ShowForm }) => {
   const showForm = useAppSelector(selectShowByForm(form));
   
-  // Early return if form should not be shown - prevents component from mounting
+  // If form is hidden, show a collapsed header to allow re-enabling
   if (!showForm) {
-    return null;
+    return <CollapsedFormHeader form={form} />;
   }
   
   const Component = formTypeToComponent[form];
