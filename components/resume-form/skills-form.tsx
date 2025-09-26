@@ -1,3 +1,4 @@
+import React, { useCallback } from "react";
 import { useAppDispatch, useAppSelector } from "@/lib/redux/hooks";
 import { changeSkills, selectSkills } from "@/lib/redux/resume-slice";
 import { changeShowBulletPoints, selectShowBulletPoints } from "@/lib/redux/settings-slice";
@@ -6,7 +7,7 @@ import { BulletListTextarea, InputGroupWrapper } from "./form/input-group";
 import { BulletListIconButton } from "./form/icon-button";
 import { FeaturedSkillInput } from "./form/featured-skill-input";
 
-export const SkillsForm = () => {
+export const SkillsForm = React.memo(() => {
   const skills = useAppSelector(selectSkills);
   const dispatch = useAppDispatch();
   const { featuredSkills, descriptions } = skills;
@@ -17,6 +18,11 @@ export const SkillsForm = () => {
   const handleSkillsChange = (field: "descriptions", value: string[]) => {
     dispatch(changeSkills({ field, value }));
   };
+
+  // Wrapper function for BulletListTextarea component
+  const handleDescriptionsChange = useCallback((name: string, value: string[]) => {
+    handleSkillsChange("descriptions", value);
+  }, []);
   const handleFeaturedSkillsChange = (
     idx: number,
     skill: string,
@@ -38,7 +44,7 @@ export const SkillsForm = () => {
             name="descriptions"
             placeholder="Bullet points"
             value={descriptions}
-            onChange={handleSkillsChange}
+            onChange={handleDescriptionsChange}
             showBulletPoints={showBulletPoints}
           />
           <div className="absolute left-[4.5rem] top-[0.07rem]">
@@ -75,4 +81,6 @@ export const SkillsForm = () => {
       </div>
     </Form>
   );
-};
+});
+
+SkillsForm.displayName = 'SkillsForm';

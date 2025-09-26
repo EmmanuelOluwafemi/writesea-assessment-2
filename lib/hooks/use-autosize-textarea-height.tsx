@@ -21,6 +21,11 @@ export const useAutosizeTextareaHeight = ({ value }: { value: string }) => {
     }
   };
 
+  // Initial resize on mount
+  useEffect(() => {
+    resizeHeight();
+  }, []);
+
   // Resize height when value changes
   useEffect(() => {
     resizeHeight();

@@ -1,5 +1,5 @@
+import React from "react";
 import { Text, View, Link } from "@react-pdf/renderer";
-import { Style } from "util";
 import { spacing, styles } from "../styles";
 import { DEBUG_RESUME_PDF_FLAG } from "@/lib/constants";
 
@@ -50,7 +50,18 @@ export const ResumePDFSection = ({
   </View>
 );
 
-export const ResumePDFText = ({
+// Memoized base styles for text components
+const baseTextStyle = {
+  color: "black",
+  fontWeight: "normal" as const,
+};
+
+const boldTextStyle = {
+  color: "black",
+  fontWeight: "bold" as const,
+};
+
+export const ResumePDFText = React.memo(({
   bold = false,
   themeColor,
   style,
@@ -61,55 +72,84 @@ export const ResumePDFText = ({
   style?: any;
   children: React.ReactNode;
 }) => {
+  // Use memoized base style and only override when necessary
+  const baseStyle = bold ? boldTextStyle : baseTextStyle;
+  const finalStyle = themeColor || style 
+    ? {
+        ...baseStyle,
+        ...(themeColor && { color: themeColor }),
+        ...style,
+      }
+    : baseStyle;
+
   return (
     <Text
-      style={{
-        color: themeColor || "black",
-        fontWeight: bold ? "bold" : "normal",
-        ...style,
-      }}
+      style={finalStyle}
       debug={DEBUG_RESUME_PDF_FLAG}
     >
       {children}
     </Text>
   );
+});
+
+// Memoized styles to prevent recreation on every render
+const bulletTextStyle = {
+  paddingLeft: spacing["2"],
+  paddingRight: spacing["2"],
+  lineHeight: "1.3",
 };
 
-export const ResumePDFBulletList = ({
+const itemTextStyle = {
+  lineHeight: "1.3",
+  flexGrow: 1,
+  flexBasis: 0,
+};
+
+const rowStyle = {
+  ...styles.flexRow,
+};
+
+export const ResumePDFBulletList = React.memo(({
   items,
   showBulletPoints = true,
 }: {
   items: string[];
   showBulletPoints?: boolean;
 }) => {
+  // Early return for empty items to avoid unnecessary rendering
+  if (!items || items.length === 0) {
+    return null;
+  }
+
   return (
     <>
-      {items.map((item, idx) => (
-        <View style={{ ...styles.flexRow }} key={idx}>
-          {showBulletPoints && (
-            <ResumePDFText
-              style={{
-                paddingLeft: spacing["2"],
-                paddingRight: spacing["2"],
-                lineHeight: "1.3",
-              }}
-              bold={true}
-            >
-              {"•"}
+      {items.map((item, idx) => {
+        // Skip empty items to improve performance
+        if (!item || item.trim() === '') {
+          return null;
+        }
+        
+        return (
+          <View style={rowStyle} key={idx}>
+            {showBulletPoints && (
+              <ResumePDFText
+                style={bulletTextStyle}
+                bold={true}
+              >
+                {"•"}
+              </ResumePDFText>
+            )}
+            {/* A breaking change was introduced causing text layout to be wider than node's width
+                https://github.com/diegomura/react-pdf/issues/2182. flexGrow & flexBasis fixes it */}
+            <ResumePDFText style={itemTextStyle}>
+              {item}
             </ResumePDFText>
-          )}
-          {/* A breaking change was introduced causing text layout to be wider than node's width
-              https://github.com/diegomura/react-pdf/issues/2182. flexGrow & flexBasis fixes it */}
-          <ResumePDFText
-            style={{ lineHeight: "1.3", flexGrow: 1, flexBasis: 0 }}
-          >
-            {item}
-          </ResumePDFText>
-        </View>
-      ))}
+          </View>
+        );
+      })}
     </>
   );
-};
+});
 
 export const ResumePDFLink = ({
   src,

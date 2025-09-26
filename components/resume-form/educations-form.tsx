@@ -1,3 +1,4 @@
+import React from "react";
 import { useAppDispatch, useAppSelector } from "@/lib/redux/hooks";
 import { changeEducations, selectEducations } from "@/lib/redux/resume-slice";
 import { changeShowBulletPoints, selectShowBulletPoints } from "@/lib/redux/settings-slice";
@@ -7,7 +8,7 @@ import { ResumeEducation } from "@/lib/redux/types";
 import { BulletListTextarea, Input } from "./form/input-group";
 import { BulletListIconButton } from "./form/icon-button";
 
-export const EducationsForm = () => {
+export const EducationsForm = React.memo(() => {
   const educations = useAppSelector(selectEducations);
   const dispatch = useAppDispatch();
   const showDelete = educations.length > 1;
@@ -24,6 +25,27 @@ export const EducationsForm = () => {
           ]: CreateHandleChangeArgsWithDescriptions<ResumeEducation>
         ) => {
           dispatch(changeEducations({ idx, field, value } as any));
+        };
+
+        // Create wrapper functions for Input components
+        const handleSchoolChange = (name: string, value: string) => {
+          handleEducationChange("school", value);
+        };
+        
+        const handleDegreeChange = (name: string, value: string) => {
+          handleEducationChange("degree", value);
+        };
+        
+        const handleGpaChange = (name: string, value: string) => {
+          handleEducationChange("gpa", value);
+        };
+        
+        const handleDateChange = (name: string, value: string) => {
+          handleEducationChange("date", value);
+        };
+        
+        const handleDescriptionsChange = (name: string, value: string[]) => {
+          handleEducationChange("descriptions", value);
         };
 
         const handleShowBulletPoints = (value: boolean) => {
@@ -49,7 +71,7 @@ export const EducationsForm = () => {
               name="school"
               placeholder="Cornell University"
               value={school}
-              onChange={handleEducationChange}
+              onChange={handleSchoolChange}
             />
             <Input
               label="Date"
@@ -57,7 +79,7 @@ export const EducationsForm = () => {
               name="date"
               placeholder="May 2018"
               value={date}
-              onChange={handleEducationChange}
+              onChange={handleDateChange}
             />
             <Input
               label="Degree & Major"
@@ -65,7 +87,7 @@ export const EducationsForm = () => {
               name="degree"
               placeholder="Bachelor of Science in Computer Engineering"
               value={degree}
-              onChange={handleEducationChange}
+              onChange={handleDegreeChange}
             />
             <Input
               label="GPA"
@@ -73,22 +95,22 @@ export const EducationsForm = () => {
               name="gpa"
               placeholder="3.81"
               value={gpa}
-              onChange={handleEducationChange}
+              onChange={handleGpaChange}
             />
             <div className="relative col-span-full">
               <BulletListTextarea
                 label="Additional Information (Optional)"
                 labelClassName="col-span-full"
                 name="descriptions"
-                placeholder="Free paragraph space to list out additional activities, courses, awards etc"
+                placeholder="Bullet points"
                 value={descriptions}
-                onChange={handleEducationChange}
+                onChange={handleDescriptionsChange}
                 showBulletPoints={showBulletPoints}
               />
               <div className="absolute left-[15.6rem] top-[0.07rem]">
                 <BulletListIconButton
                   showBulletPoints={showBulletPoints}
-                  onClick={handleShowBulletPoints}
+                  onClick={() => handleShowBulletPoints(!showBulletPoints)}
                 />
               </div>
             </div>
@@ -97,4 +119,6 @@ export const EducationsForm = () => {
       })}
     </Form>
   );
-};
+});
+
+EducationsForm.displayName = 'EducationsForm';

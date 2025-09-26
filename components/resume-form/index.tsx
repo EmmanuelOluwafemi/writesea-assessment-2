@@ -1,6 +1,6 @@
 "use client";
-import { selectFormsOrder, ShowForm } from "@/lib/redux/settings-slice";
-import { useState } from "react";
+import React, { useState, useDeferredValue, useTransition } from "react";
+import { selectFormsOrder, selectShowByForm, ShowForm } from "@/lib/redux/settings-slice";
 import { WorkExperiencesForm } from "./work-experiences-form";
 import { EducationsForm } from "./educations-form";
 import { ProjectsForm } from "./projects-form";
@@ -11,21 +11,24 @@ import { ProfileForm } from "./profile-form";
 import { FlexboxSpacer } from "../flexbox-spacer";
 import { cx } from "@/lib/cx";
 
-
 const formTypeToComponent: { [type in ShowForm]: () => React.ReactNode } = {
-  workExperiences: WorkExperiencesForm,
-  educations: EducationsForm,
-  projects: ProjectsForm,
-  skills: SkillsForm,
-  custom: CustomForm,
+  workExperiences: WorkExperiencesForm as any,
+  educations: EducationsForm as any,
+  projects: ProjectsForm as any,
+  skills: SkillsForm as any,
+  custom: CustomForm as any,
 };
 
 export const ResumeForm = () => {
   useSetInitialStore();
   useSaveStateToLocalStorageOnChange();
-
+  
   const formsOrder = useAppSelector(selectFormsOrder);
   const [isHover, setIsHover] = useState(false);
+  const [isPending, startTransition] = useTransition();
+  
+  // Defer form rendering to reduce priority and improve responsiveness
+  const deferredFormsOrder = useDeferredValue(formsOrder);
 
   return (
     <div
@@ -38,10 +41,9 @@ export const ResumeForm = () => {
     >
       <section className="flex max-w-2xl flex-col gap-8 p-[var(--resume-padding)]">
         <ProfileForm />
-        {formsOrder.map((form) => {
-          const Component = formTypeToComponent[form];
-          return <Component key={form} />;
-        })}
+        {deferredFormsOrder.map((form) => (
+          <ConditionalFormRenderer key={form} form={form} />
+        ))}
         {/* <ThemeForm /> */}
         <br />
       </section>
@@ -49,3 +51,19 @@ export const ResumeForm = () => {
     </div>
   );
 };
+
+// Conditional form renderer component
+const ConditionalFormRenderer = React.memo(({ form }: { form: ShowForm }) => {
+  const showForm = useAppSelector(selectShowByForm(form));
+  
+  // Early return if form should not be shown - prevents component from mounting
+  if (!showForm) {
+    return null;
+  }
+  
+  const Component = formTypeToComponent[form];
+  return <Component />;
+});
+
+// Add display name for better debugging
+ConditionalFormRenderer.displayName = 'ConditionalFormRenderer';

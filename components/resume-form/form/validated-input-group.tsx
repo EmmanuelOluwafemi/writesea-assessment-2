@@ -1,14 +1,13 @@
-import React, { useState, useEffect, useMemo, useCallback } from "react";
+import React, { useCallback, useMemo } from "react";
 import { useAutosizeTextareaHeight } from "@/lib/hooks/use-autosize-textarea-height";
+import { useState, useEffect } from "react";
 import ContentEditable from "react-contenteditable";
 import { useFieldValidation } from "@/lib/validation/hooks";
 import { z } from "zod";
 
-interface InputProps<K extends string, V extends string | string[]> {
+interface ValidatedInputProps<K extends string, V extends string | string[]> {
   label: string;
   labelClassName?: string;
-  // name is passed in as a const string. Therefore, we make it a generic type so its type can
-  // be more restricted as a const for the first argument in onChange
   name: K;
   value?: V;
   placeholder: string;
@@ -18,10 +17,9 @@ interface InputProps<K extends string, V extends string | string[]> {
 }
 
 /**
- * InputGroupWrapper wraps a label element around a input children. This is preferable
- * than having input as a sibling since it makes clicking label auto focus input children
+ * Enhanced InputGroupWrapper with validation support
  */
-export const InputGroupWrapper = ({
+export const ValidatedInputGroupWrapper = ({
   label,
   className,
   children,
@@ -34,8 +32,8 @@ export const InputGroupWrapper = ({
   error?: string;
   showError?: boolean;
 }) => (
-  <div className={`w-full ${className}`}>
-    <label className="text-base font-medium text-gray-700">
+  <div className="w-full">
+    <label className={`text-base font-medium text-gray-700 ${className}`}>
       {label}
       {children}
     </label>
@@ -48,14 +46,14 @@ export const InputGroupWrapper = ({
 export const INPUT_CLASS_NAME =
   "mt-1 px-3 py-2 block w-full rounded-md border text-gray-900 shadow-sm outline-none font-normal text-base transition-colors duration-200";
 
-const getInputClassName = (hasError: boolean) =>
+export const getInputClassName = (hasError: boolean) =>
   `${INPUT_CLASS_NAME} ${
     hasError
       ? "border-red-300 focus:border-red-500 focus:ring-red-500"
       : "border-gray-300 focus:border-blue-500 focus:ring-blue-500"
   }`;
 
-export const Input = React.memo(<K extends string>({
+export const ValidatedInput = <K extends string>({
   name,
   value = "",
   placeholder,
@@ -63,8 +61,11 @@ export const Input = React.memo(<K extends string>({
   label,
   labelClassName,
   validationSchema,
-  showValidation = false,
-}: InputProps<K, string>) => {
+  showValidation = true,
+}: ValidatedInputProps<K, string>) => {
+  const validation = useFieldValidation(validationSchema || z.string(), value);
+  const hasError = showValidation && !validation.isValid;
+
   const handleChange = useCallback(
     (e: React.ChangeEvent<HTMLInputElement>) => {
       onChange(name, e.target.value);
@@ -73,14 +74,16 @@ export const Input = React.memo(<K extends string>({
   );
 
   const inputClassName = useMemo(
-    () => getInputClassName(false), // No validation styling for performance
-    []
+    () => getInputClassName(hasError),
+    [hasError]
   );
 
   return (
-    <InputGroupWrapper 
-      label={label} 
+    <ValidatedInputGroupWrapper
+      label={label}
       className={labelClassName}
+      error={validation.error}
+      showError={showValidation}
     >
       <input
         type="text"
@@ -89,41 +92,45 @@ export const Input = React.memo(<K extends string>({
         placeholder={placeholder}
         onChange={handleChange}
         className={inputClassName}
+        aria-invalid={hasError}
+        aria-describedby={hasError ? `${name}-error` : undefined}
       />
-    </InputGroupWrapper>
+    </ValidatedInputGroupWrapper>
   );
-});
+};
 
-Input.displayName = 'Input';
-
-export const Textarea = React.memo(<T extends string>({
+export const ValidatedTextarea = <T extends string>({
   label,
-  labelClassName: wrapperClassName,
+  labelClassName,
   name,
   value = "",
   placeholder,
   onChange,
   validationSchema,
-  showValidation = false,
-}: InputProps<T, string>) => {
+  showValidation = true,
+}: ValidatedInputProps<T, string>) => {
   const textareaRef = useAutosizeTextareaHeight({ value });
-  
+  const validation = useFieldValidation(validationSchema || z.string(), value);
+  const hasError = showValidation && !validation.isValid;
+
   const handleChange = useCallback(
     (e: React.ChangeEvent<HTMLTextAreaElement>) => {
       onChange(name, e.target.value);
     },
     [name, onChange]
   );
-  
+
   const textareaClassName = useMemo(
-    () => `${getInputClassName(false)} resize-none overflow-hidden min-h-[2.5rem]`,
-    []
+    () => `${getInputClassName(hasError)} resize-none overflow-hidden`,
+    [hasError]
   );
 
   return (
-    <InputGroupWrapper 
-      label={label} 
-      className={wrapperClassName}
+    <ValidatedInputGroupWrapper
+      label={label}
+      className={labelClassName}
+      error={validation.error}
+      showError={showValidation}
     >
       <textarea
         ref={textareaRef}
@@ -132,15 +139,15 @@ export const Textarea = React.memo(<T extends string>({
         placeholder={placeholder}
         value={value}
         onChange={handleChange}
+        aria-invalid={hasError}
+        aria-describedby={hasError ? `${name}-error` : undefined}
       />
-    </InputGroupWrapper>
+    </ValidatedInputGroupWrapper>
   );
-});
+};
 
-Textarea.displayName = 'Textarea';
-
-export const BulletListTextarea = React.memo(<T extends string>(
-  props: InputProps<T, string[]> & { showBulletPoints?: boolean }
+export const ValidatedBulletListTextarea = <T extends string>(
+  props: ValidatedInputProps<T, string[]> & { showBulletPoints?: boolean }
 ) => {
   const [showFallback, setShowFallback] = useState(false);
 
@@ -148,76 +155,81 @@ export const BulletListTextarea = React.memo(<T extends string>(
     const isFirefox = navigator.userAgent.includes("Firefox");
     const isSafari =
       navigator.userAgent.includes("Safari") &&
-      !navigator.userAgent.includes("Chrome"); // Note that Chrome also includes Safari in its userAgent
+      !navigator.userAgent.includes("Chrome");
     if (isFirefox || isSafari) {
       setShowFallback(true);
     }
   }, []);
 
   if (showFallback) {
-    return <BulletListTextareaFallback {...(props as any)} />;
+    return <ValidatedBulletListTextareaFallback {...props} />;
   }
-  return <BulletListTextareaGeneral {...(props as any)} />;
-});
-
-BulletListTextarea.displayName = 'BulletListTextarea';
+  return <ValidatedBulletListTextareaGeneral {...props} />;
+};
 
 /**
- * BulletListTextareaGeneral is a textarea where each new line starts with a bullet point.
- *
- * In its core, it uses a div with contentEditable set to True. However, when
- * contentEditable is True, user can paste in any arbitrary html and it would
- * render. So to make it behaves like a textarea, it strips down all html while
- * keeping only the text part.
- *
- * Reference: https://stackoverflow.com/a/74998090/7699841
+ * Enhanced BulletListTextarea with validation
  */
-const BulletListTextareaGeneral = React.memo(<T extends string>({
+const ValidatedBulletListTextareaGeneral = <T extends string>({
   label,
-  labelClassName: wrapperClassName,
+  labelClassName,
   name,
   value: bulletListStrings = [],
   placeholder,
   onChange,
   showBulletPoints = true,
-}: InputProps<T, string[]> & { showBulletPoints?: boolean }) => {
-  const html = useMemo(() => getHTMLFromBulletListStrings(bulletListStrings), [bulletListStrings]);
-  
-  const handleChange = useCallback((e: any) => {
-    if (e.type === "input") {
-      const { innerText } = e.currentTarget as HTMLDivElement;
-      const newBulletListStrings = getBulletListStringsFromInnerText(innerText);
-      onChange(name as any, newBulletListStrings as any);
-    }
-  }, [name, onChange]);
+  validationSchema,
+  showValidation = true,
+}: ValidatedInputProps<T, string[]> & { showBulletPoints?: boolean }) => {
+  const validation = useFieldValidation(
+    validationSchema || z.array(z.string()),
+    bulletListStrings
+  );
+  const hasError = showValidation && !validation.isValid;
+  const html = getHTMLFromBulletListStrings(bulletListStrings);
+
+  const handleChange = useCallback(
+    (e: any) => {
+      if (e.type === "input") {
+        const { innerText } = e.currentTarget as HTMLDivElement;
+        const newBulletListStrings =
+          getBulletListStringsFromInnerText(innerText);
+        onChange(name, newBulletListStrings);
+      }
+    },
+    [name, onChange]
+  );
 
   const contentEditableClassName = useMemo(
-    () => `${INPUT_CLASS_NAME} cursor-text [&>div]:list-item ${
-      showBulletPoints ? "pl-7" : "[&>div]:list-['']"
-    }`,
-    [showBulletPoints]
+    () =>
+      `${getInputClassName(hasError)} cursor-text [&>div]:list-item ${
+        showBulletPoints ? "pl-7" : "[&>div]:list-['']"
+      }`,
+    [hasError, showBulletPoints]
   );
 
   return (
-    <InputGroupWrapper label={label} className={wrapperClassName}>
+    <ValidatedInputGroupWrapper
+      label={label}
+      className={labelClassName}
+      error={validation.error}
+      showError={showValidation}
+    >
       <ContentEditable
         contentEditable={true}
         className={contentEditableClassName}
         placeholder={placeholder}
         onChange={handleChange}
         html={html}
+        aria-invalid={hasError}
+        aria-describedby={hasError ? `${name}-error` : undefined}
       />
-    </InputGroupWrapper>
+    </ValidatedInputGroupWrapper>
   );
-});
+};
 
 const NORMALIZED_LINE_BREAK = "\n";
-/**
- * Normalize line breaks to be \n since different OS uses different line break
- *    Windows -> \r\n (CRLF)
- *    Unix    -> \n (LF)
- *    Mac     -> \n (LF), or \r (CR) for earlier versions
- */
+
 const normalizeLineBreak = (str: string) =>
   str.replace(/\r?\n/g, NORMALIZED_LINE_BREAK);
 const dedupeLineBreak = (str: string) =>
@@ -226,12 +238,8 @@ const getStringsByLineBreak = (str: string) => str.split(NORMALIZED_LINE_BREAK);
 
 const getBulletListStringsFromInnerText = (innerText: string) => {
   const innerTextWithNormalizedLineBreak = normalizeLineBreak(innerText);
-
-  // In Windows Chrome, pressing enter creates 2 line breaks "\n\n"
-  // This dedupes it into 1 line break "\n"
   let newInnerText = dedupeLineBreak(innerTextWithNormalizedLineBreak);
 
-  // Handle the special case when content is empty
   if (newInnerText === NORMALIZED_LINE_BREAK) {
     newInnerText = "";
   }
@@ -240,7 +248,6 @@ const getBulletListStringsFromInnerText = (innerText: string) => {
 };
 
 const getHTMLFromBulletListStrings = (bulletListStrings: string[]) => {
-  // If bulletListStrings is an empty array, make it an empty div
   if (bulletListStrings.length === 0) {
     return "<div></div>";
   }
@@ -249,12 +256,9 @@ const getHTMLFromBulletListStrings = (bulletListStrings: string[]) => {
 };
 
 /**
- * BulletListTextareaFallback is a fallback for BulletListTextareaGeneral to work around
- * content editable div issue in some browsers. For example, in Firefox, if user enters
- * space in the content editable div at the end of line, Firefox returns it as a new
- * line character \n instead of space in innerText.
+ * Fallback version for browsers with ContentEditable issues
  */
-const BulletListTextareaFallback = <T extends string>({
+const ValidatedBulletListTextareaFallback = <T extends string>({
   label,
   labelClassName,
   name,
@@ -262,25 +266,34 @@ const BulletListTextareaFallback = <T extends string>({
   placeholder,
   onChange,
   showBulletPoints = true,
-}: InputProps<T, string[]> & { showBulletPoints?: boolean }) => {
+  validationSchema,
+  showValidation = true,
+}: ValidatedInputProps<T, string[]> & { showBulletPoints?: boolean }) => {
   const textareaValue = getTextareaValueFromBulletListStrings(
     bulletListStrings,
     showBulletPoints
   );
 
+  const handleChange = useCallback(
+    (textareaName: T, value: string) => {
+      onChange(
+        name,
+        getBulletListStringsFromTextareaValue(value, showBulletPoints)
+      );
+    },
+    [name, onChange, showBulletPoints]
+  );
+
   return (
-    <Textarea
+    <ValidatedTextarea
       label={label}
       labelClassName={labelClassName}
       name={name}
       value={textareaValue}
       placeholder={placeholder}
-      onChange={(name, value) => {
-        onChange(
-          name as any,
-          getBulletListStringsFromTextareaValue(value, showBulletPoints)
-        );
-      }}
+      onChange={handleChange}
+      validationSchema={validationSchema as any}
+      showValidation={showValidation}
     />
   );
 };
@@ -314,7 +327,6 @@ const getBulletListStringsFromTextareaValue = (
   const strings = getStringsByLineBreak(textareaValueWithNormalizedLineBreak);
 
   if (showBulletPoints) {
-    // Filter out empty strings
     const nonEmptyStrings = strings.filter((s) => s !== "•");
 
     let newStrings: string[] = [];
@@ -322,8 +334,6 @@ const getBulletListStringsFromTextareaValue = (
       if (string.startsWith("• ")) {
         newStrings.push(string.slice(2));
       } else if (string.startsWith("•")) {
-        // Handle the special case when user wants to delete the bullet point, in which case
-        // we combine it with the previous line if previous line exists
         const lastItemIdx = newStrings.length - 1;
         if (lastItemIdx >= 0) {
           const lastItem = newStrings[lastItemIdx];

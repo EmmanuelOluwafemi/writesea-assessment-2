@@ -1,4 +1,6 @@
 import React, { useMemo, useCallback } from "react";
+import { cx } from "@/lib/cx";
+import { ExpanderWithHeightTransition } from "@/components/expander-with-height-transition";
 import {
   BuildingOfficeIcon,
   AcademicCapIcon,
@@ -27,7 +29,6 @@ import {
   MoveIconButton,
   ShowIconButton,
 } from "./icon-button";
-import { ExpanderWithHeightTransition } from "@/components/expander-with-height-transition";
 
 /**
  * BaseForm is the bare bone form, i.e. just the outline with no title and no control buttons.
@@ -35,11 +36,11 @@ import { ExpanderWithHeightTransition } from "@/components/expander-with-height-
  */
 export const BaseForm = React.memo(
   ({
-    children,
-    className,
-  }: {
-    children: React.ReactNode;
-    className?: string;
+  children,
+  className,
+}: {
+  children: React.ReactNode;
+  className?: string;
   }) => (
     <section
       className={`flex flex-col gap-3 rounded-md bg-white p-6 pt-4 shadow transition-opacity duration-200 ${className}`}
@@ -47,7 +48,7 @@ export const BaseForm = React.memo(
       {children}
     </section>
   )
-);
+  );
 
 const FORM_TO_ICON: { [section in ShowForm]: typeof BuildingOfficeIcon } = {
   workExperiences: BuildingOfficeIcon,
@@ -57,71 +58,65 @@ const FORM_TO_ICON: { [section in ShowForm]: typeof BuildingOfficeIcon } = {
   custom: WrenchIcon,
 };
 
-// Memoized FormHeader component to prevent unnecessary re-renders
-const FormHeader = React.memo(
-  ({
-    form,
-    Icon,
-    heading,
-    onHeadingChange,
-    isFirstForm,
-    isLastForm,
-    showForm,
-    onMoveClick,
-    onShowFormChange,
-  }: {
-    form: ShowForm;
-    Icon: typeof BuildingOfficeIcon;
-    heading: string;
-    onHeadingChange: (heading: string) => void;
-    isFirstForm: boolean;
-    isLastForm: boolean;
-    showForm: boolean;
-    onMoveClick: (type: "up" | "down") => void;
-    onShowFormChange: (show: boolean) => void;
-  }) => (
-    <div className="flex items-center justify-between gap-4">
-      <div className="flex grow items-center gap-2">
-        <Icon className="h-6 w-6 text-gray-600" aria-hidden="true" />
-        <input
-          type="text"
-          className="block w-full border-b border-transparent text-lg font-semibold tracking-wide text-gray-900 outline-none hover:border-gray-300 hover:shadow-sm focus:border-gray-300 focus:shadow-sm"
-          value={heading}
-          onChange={(e) => onHeadingChange(e.target.value)}
-        />
-      </div>
-      <div className="flex items-center gap-0.5">
-        {!isFirstForm && <MoveIconButton type="up" onClick={onMoveClick} />}
-        {!isLastForm && <MoveIconButton type="down" onClick={onMoveClick} />}
-        <ShowIconButton show={showForm} setShow={onShowFormChange} />
-      </div>
+const FormHeader = ({
+  form,
+  Icon,
+  heading,
+  onHeadingChange,
+  isFirstForm,
+  isLastForm,
+  showForm,
+  onMoveClick,
+  onShowFormChange,
+}: {
+  form: ShowForm;
+  Icon: typeof BuildingOfficeIcon;
+  heading: string;
+  onHeadingChange: (heading: string) => void;
+  isFirstForm: boolean;
+  isLastForm: boolean;
+  showForm: boolean;
+  onMoveClick: (type: "up" | "down") => void;
+  onShowFormChange: (show: boolean) => void;
+}) => (
+  <div className="flex items-center justify-between gap-4">
+    <div className="flex grow items-center gap-2">
+      <Icon className="h-6 w-6 text-gray-600" aria-hidden="true" />
+      <input
+        type="text"
+        className="block w-full border-b border-transparent text-lg font-semibold tracking-wide text-gray-900 outline-none hover:border-gray-300 hover:shadow-sm focus:border-gray-300 focus:shadow-sm"
+        value={heading}
+        onChange={(e) => onHeadingChange(e.target.value)}
+      />
     </div>
-  )
+    <div className="flex items-center gap-0.5">
+      {!isFirstForm && <MoveIconButton type="up" onClick={onMoveClick} />}
+      {!isLastForm && <MoveIconButton type="down" onClick={onMoveClick} />}
+      <ShowIconButton show={showForm} setShow={onShowFormChange} />
+    </div>
+  </div>
 );
 
-// Memoized AddButton component
-const AddButton = React.memo(
-  ({
-    addButtonText,
-    onAddClick,
-  }: {
-    addButtonText: string;
-    onAddClick: () => void;
-  }) => (
-    <div className="mt-2 flex justify-end">
-      <button
-        type="button"
-        onClick={onAddClick}
-        className="flex items-center rounded-md bg-white py-2 pl-3 pr-4 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50"
-      >
-        <PlusSmallIcon
-          className="-ml-0.5 mr-1.5 h-5 w-5 text-gray-400"
-          aria-hidden="true"
-        />
-        {addButtonText}
-      </button>
-    </div>
-  )
+const AddButton = ({
+  addButtonText,
+  onAddClick,
+}: {
+  addButtonText: string;
+  onAddClick: () => void;
+}) => (
+  <div className="mt-2 flex justify-end">
+    <button
+      type="button"
+      onClick={onAddClick}
+      className="flex items-center rounded-md bg-white py-2 pl-3 pr-4 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50"
+    >
+      <PlusSmallIcon
+        className="-ml-0.5 mr-1.5 h-5 w-5 text-gray-400"
+        aria-hidden="true"
+      />
+      {addButtonText}
+    </button>
+  </div>
 );
 
 export const Form = React.memo(
@@ -237,10 +232,10 @@ export const FormSection = React.memo(
       [dispatch, form, idx]
     );
 
-    // Memoize button visibility classes
+    // Memoize button visibility classes with specific transitions for better performance
     const moveUpClasses = useMemo(
       () =>
-        `transition-all duration-300 ${
+        `transition-[opacity,visibility,margin] duration-300 ease-out ${
           showMoveUp ? "" : "invisible opacity-0"
         } ${showMoveDown ? "" : "-mr-6"}`,
       [showMoveUp, showMoveDown]
@@ -248,7 +243,7 @@ export const FormSection = React.memo(
 
     const moveDownClasses = useMemo(
       () =>
-        `transition-all duration-300 ${
+        `transition-[opacity,visibility] duration-300 ease-out ${
           showMoveDown ? "" : "invisible opacity-0"
         }`,
       [showMoveDown]
@@ -256,7 +251,7 @@ export const FormSection = React.memo(
 
     const deleteClasses = useMemo(
       () =>
-        `transition-all duration-300 ${
+        `transition-[opacity,visibility] duration-300 ease-out ${
           showDelete ? "" : "invisible opacity-0"
         }`,
       [showDelete]

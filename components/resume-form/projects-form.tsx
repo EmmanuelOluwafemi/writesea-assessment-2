@@ -1,3 +1,4 @@
+import React from "react";
 import { useAppDispatch, useAppSelector } from "@/lib/redux/hooks";
 import { changeProjects, selectProjects } from "@/lib/redux/resume-slice";
 import { Form, FormSection } from "./form";
@@ -5,8 +6,7 @@ import { CreateHandleChangeArgsWithDescriptions } from "./types";
 import { ResumeProject } from "@/lib/redux/types";
 import { BulletListTextarea, Input } from "./form/input-group";
 
-
-export const ProjectsForm = () => {
+export const ProjectsForm = React.memo(() => {
   const projects = useAppSelector(selectProjects);
   const dispatch = useAppDispatch();
   const showDelete = projects.length > 1;
@@ -22,6 +22,20 @@ export const ProjectsForm = () => {
         ) => {
           dispatch(changeProjects({ idx, field, value } as any));
         };
+
+        // Create wrapper functions for Input components
+        const handleProjectNameChange = (name: string, value: string) => {
+          handleProjectChange("project", value);
+        };
+        
+        const handleDateChange = (name: string, value: string) => {
+          handleProjectChange("date", value);
+        };
+        
+        const handleDescriptionsChange = (name: string, value: string[]) => {
+          handleProjectChange("descriptions", value);
+        };
+
         const showMoveUp = idx !== 0;
         const showMoveDown = idx !== projects.length - 1;
 
@@ -40,7 +54,7 @@ export const ProjectsForm = () => {
               label="Project Name"
               placeholder="OpenResume"
               value={project}
-              onChange={handleProjectChange}
+              onChange={handleProjectNameChange}
               labelClassName="col-span-4"
             />
             <Input
@@ -48,7 +62,7 @@ export const ProjectsForm = () => {
               label="Date"
               placeholder="Winter 2022"
               value={date}
-              onChange={handleProjectChange}
+              onChange={handleDateChange}
               labelClassName="col-span-2"
             />
             <BulletListTextarea
@@ -56,7 +70,7 @@ export const ProjectsForm = () => {
               label="Description"
               placeholder="Bullet points"
               value={descriptions}
-              onChange={handleProjectChange}
+              onChange={handleDescriptionsChange}
               labelClassName="col-span-full"
             />
           </FormSection>
@@ -64,4 +78,6 @@ export const ProjectsForm = () => {
       })}
     </Form>
   );
-};
+});
+
+ProjectsForm.displayName = 'ProjectsForm';
